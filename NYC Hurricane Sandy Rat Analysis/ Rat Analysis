@@ -1,0 +1,263 @@
+library(scales)
+library(ggplot2)
+library(reshape2)
+library(plyr)
+library(zoo)
+library(lubridate)
+# Load the data into R
+Inspection = read.csv("Rodent_Inspection.csv",header=TRUE,sep=",")
+
+# PART ONE - DESCRIPTIVE STATS AND FIGURES
+
+# Convert all date strings into R Dates
+Inspection$INSPECTION_DATE = format(as.POSIXct(Inspection$INSPECTION_DATE,format='%m/%d/%Y'),format='%m/%d/%Y')
+Inspection$INSPECTION_DATE = as.Date(Inspection$INSPECTION_DATE,"%m/%d/%Y")
+
+# Now that we have the dates properly formatted, we need to subset the data for each of the boroughs
+Brooklyn = subset(Inspection, BOROUGH == "Brooklyn")
+Bronx = subset(Inspection, BOROUGH == "Bronx")
+Queens = subset(Inspection, BOROUGH == "Queens")
+Manhattan = subset(Inspection, BOROUGH == "Manhattan")
+Staten = subset(Inspection, BOROUGH == "Staten Island")
+
+#Now we need just get the month from each subset
+Brooklyn$INSPECTION_DATE <- as.Date(cut(Brooklyn$INSPECTION_DATE,breaks = "month"))
+Bronx$INSPECTION_DATE <- as.Date(cut(Bronx$INSPECTION_DATE,breaks = "month"))
+Queens$INSPECTION_DATE <- as.Date(cut(Queens$INSPECTION_DATE,breaks = "month"))
+Manhattan$INSPECTION_DATE <- as.Date(cut(Manhattan$INSPECTION_DATE,breaks = "month"))
+Staten$INSPECTION_DATE <- as.Date(cut(Staten$INSPECTION_DATE,breaks = "month"))
+
+#And then generate a plot for each
+ggplot(data = Brooklyn,
+       aes(INSPECTION_DATE, JOB_PROGRESS)) +
+  stat_summary(fun.y = sum, geom = "line") + 
+  ylab("Number of Inspections") +
+  labs(title = "Brooklyn") +
+  scale_x_date(
+    labels = date_format("%m-%Y"),
+    breaks = date_breaks("1 months"),
+    limits = as.Date(c('2010-01-01','2016-01-01'))) 
+
+ggplot(data = Bronx,
+       aes(INSPECTION_DATE, JOB_PROGRESS)) +
+  stat_summary(fun.y = sum, geom = "line") + 
+  ylab("Number of Inspections") +
+  labs(title = "Bronx") +
+  scale_x_date(
+    labels = date_format("%m-%Y"),
+    breaks = date_breaks("1 months"),
+    limits = as.Date(c('2010-01-01','2016-01-01'))) 
+
+ggplot(data = Queens,
+       aes(INSPECTION_DATE, JOB_PROGRESS)) +
+  stat_summary(fun.y = sum, geom = "line") + 
+  ylab("Number of Inspections") +
+  labs(title = "Queens") +
+  scale_x_date(
+    labels = date_format("%m-%Y"),
+    breaks = date_breaks("1 months"),
+    limits = as.Date(c('2010-01-01','2016-01-01'))) 
+
+ggplot(data = Manhattan,
+       aes(INSPECTION_DATE, JOB_PROGRESS)) +
+  stat_summary(fun.y = sum, geom = "line") + 
+  ylab("Number of Inspections") +
+  labs(title = "Manhattan") +
+  scale_x_date(
+    labels = date_format("%m-%Y"),
+    breaks = date_breaks("1 months"),
+    limits = as.Date(c('2010-01-01','2016-01-01'))) 
+
+ggplot(data = Staten,
+       aes(INSPECTION_DATE, JOB_PROGRESS)) +
+  stat_summary(fun.y = sum, geom = "line") + 
+  ylab("Number of Inspections") +
+  labs(title = "Staten Island") +
+  scale_x_date(
+    labels = date_format("%m-%Y"),
+    breaks = date_breaks("1 months"),
+    limits = as.Date(c('2010-01-01','2016-01-01'))) 
+
+# Now we generate a similar plot illustrating “efficiency” of rat inspections 
+# where efficiency for a given month is the number of inspections yielding 
+# "Active Rat Signs” in that month divided by the total number of inspections in that month.
+
+#Just doing it by hand instead of a for loop since it's 5 boroughs
+
+#Brooklyn
+x = Brooklyn[Brooklyn$RESULT == "Active Rat Signs",] #tempdf filtered to active
+y = count(x,c("INSPECTION_DATE","RESULT")) #counts number of active rat signs
+z = count(Brooklyn,c("INSPECTION_DATE","BOROUGH")) #counts total inspections
+y = y[y$INSPECTION_DATE >= as.Date("2010-01-01"),] #limits to 2010 forward
+z = z[z$INSPECTION_DATE >= as.Date("2010-01-01"),] #limits to 2010 forward
+
+Efficiency = y$freq/z$freq #list of efficiency ratings
+Dates = seq(as.Date("2010-01-01"), as.Date("2016-03-01"), by="months") #temp list of dates
+blorp = data.frame(v1 = Dates,v2 = Efficiency)
+
+ggplot(data = blorp,
+       aes(v1, v2)) +
+  labs(title="Brooklyn Efficiency Over Time") +
+  xlab("Date") +
+  ylab("Efficiency Rating") +
+  stat_summary(fun.y = sum, geom = "line")
+
+#Bronx
+x = Bronx[Bronx$RESULT == "Active Rat Signs",] #tempdf filtered to active
+y = count(x,c("INSPECTION_DATE","RESULT")) #counts number of active rat signs
+z = count(Bronx,c("INSPECTION_DATE","BOROUGH")) #counts total inspections
+y = y[y$INSPECTION_DATE >= as.Date("2010-01-01"),] #limits to 2010 forward
+z = z[z$INSPECTION_DATE >= as.Date("2010-01-01"),] #limits to 2010 forward
+
+Efficiency = y$freq/z$freq #list of efficiency ratings
+Dates = seq(as.Date("2010-01-01"), as.Date("2016-03-01"), by="months") #temp list of dates
+blorp = data.frame(v1 = Dates,v2 = Efficiency)
+
+ggplot(data = blorp,
+       aes(v1, v2)) +
+  labs(title="Bronx Efficiency Over Time") +
+  xlab("Date") +
+  ylab("Efficiency Rating") +
+  stat_summary(fun.y = sum, geom = "line")
+
+#Queens
+x = Queens[Queens$RESULT == "Active Rat Signs",] #tempdf filtered to active
+y = count(x,c("INSPECTION_DATE","RESULT")) #counts number of active rat signs
+z = count(Queens,c("INSPECTION_DATE","BOROUGH")) #counts total inspections
+y = y[y$INSPECTION_DATE >= as.Date("2010-01-01"),] #limits to 2010 forward
+z = z[z$INSPECTION_DATE >= as.Date("2010-01-01"),] #limits to 2010 forward
+
+Efficiency = y$freq/z$freq #list of efficiency ratings
+Dates = seq(as.Date("2010-01-01"), as.Date("2016-03-01"), by="months") #temp list of dates
+blorp = data.frame(v1 = Dates,v2 = Efficiency)
+
+ggplot(data = blorp,
+       aes(v1, v2)) +
+  labs(title="Queens Efficiency Over Time") +
+  xlab("Date") +
+  ylab("Efficiency Rating") +
+  stat_summary(fun.y = sum, geom = "line")
+
+#Manhattan
+x = Manhattan[Manhattan$RESULT == "Active Rat Signs",] #tempdf filtered to active
+y = count(x,c("INSPECTION_DATE","RESULT")) #counts number of active rat signs
+z = count(Manhattan,c("INSPECTION_DATE","BOROUGH")) #counts total inspections
+y = y[y$INSPECTION_DATE >= as.Date("2010-01-01"),] #limits to 2010 forward
+z = z[z$INSPECTION_DATE >= as.Date("2010-01-01"),] #limits to 2010 forward
+
+Efficiency = y$freq/z$freq #list of efficiency ratings
+Dates = seq(as.Date("2010-01-01"), as.Date("2016-03-01"), by="months") #temp list of dates
+blorp = data.frame(v1 = Dates,v2 = Efficiency)
+
+ggplot(data = blorp,
+       aes(v1, v2)) +
+  labs(title="Manhattan Efficiency Over Time") +
+  xlab("Date") +
+  ylab("Efficiency Rating") +
+  stat_summary(fun.y = sum, geom = "line")
+
+#Staten Island
+x = Staten[Staten$RESULT == "Active Rat Signs",] #tempdf filtered to active
+y = count(x,c("INSPECTION_DATE","RESULT")) #counts number of active rat signs
+z = count(Staten,c("INSPECTION_DATE","BOROUGH")) #counts total inspections
+y = y[y$INSPECTION_DATE >= as.Date("2010-01-01"),] #limits to 2010 forward
+z = z[z$INSPECTION_DATE >= as.Date("2010-01-01"),] #limits to 2010 forward
+
+Efficiency = y$freq/z$freq #list of efficiency ratings
+Dates = seq(as.Date("2010-01-01"), as.Date("2016-03-01"), by="months") #temp list of dates
+blorp = data.frame(v1 = Dates,v2 = Efficiency)
+
+ggplot(data = blorp,
+       aes(v1, v2)) +
+  labs(title="Staten Island Efficiency Over Time") +
+  xlab("Date") +
+  ylab("Efficiency Rating") +
+  stat_summary(fun.y = sum, geom = "line")
+
+
+#Generate a list of the top ten zip codes with the largest number of inspections yielding active rat signs.
+
+library(sqldf)
+HotSpots = sqldf('select ZIP_CODE,count(*) from Inspection where RESULT="Active Rat Signs" group by ZIP_CODE order by count(*) desc limit 10')
+#This seems easier as an SQL query, so using the sqldf package to query the dataframe to output the top 10 zip codes
+
+
+
+
+
+
+
+
+
+#PART TWO Geographic patterns before and After Hurricane Sandy
+sandyrelated = read.csv("sandyrelated.csv",header=TRUE,sep=",")
+colnames(sandyrelated)[9] <- "Zip_Code" #makes the formatting easier to use the sqldf package
+
+#First I'll make two subsets for before 2012 and after 2012, skipping the year 2012
+B12Inspection = subset(Inspection, INSPECTION_DATE < as.Date("2012-01-01"))
+A12Inspection = subset(Inspection, INSPECTION_DATE > as.Date("2012-12-31"))
+
+#Then compare top zip codes before/after
+List1 = sqldf('select ZIP_CODE,count(*) from B12Inspection where RESULT="Active Rat Signs" group by ZIP_CODE order by count(*) desc limit 20')
+List2 = sqldf('select ZIP_CODE,count(*) from A12Inspection where RESULT="Active Rat Signs" group by ZIP_CODE order by count(*) desc limit 20')
+List3 = sqldf('select Zip_Code,count(*) from sandyrelated group by Zip_Code order by count(*) desc limit 20')
+
+
+
+
+
+
+#PART THREE Rodent and Restaurant Inspection.
+#Looking at the significance of months and years via logistic regression
+
+Inspection$INSPECTION_DATE = as.Date(cut(Inspection$INSPECTION_DATE,breaks = "month")) #Getting just the month 
+
+inspection_new = Inspection 
+
+#Creating a df for total inspections
+inspection_zip = table(inspection_new[,c(11,17)])
+ziptable_total = as.data.frame(inspection_zip)
+colnames(ziptable_total) = c("zip_code","monthyear","freq")
+
+#Creating a df for active sightings
+inspection_newer = inspection_new[inspection_new$RESULT == 'Active Rat Signs',]
+inspection_newer <- inspection_new[grep("Active Rat Signs", inspection_new$RESULT),]
+inspection_newer$RESULT = factor(inspection_newer$RESULT)
+inspection_zip_rats = table(inspection_newer[,c(11,17)])
+ziptable_rats = as.data.frame(inspection_zip_rats)
+colnames(ziptable_rats) = c("zip_code","monthyear","freq")
+
+#Creating a full df with efficiency
+ziptable_rats_full = merge(ziptable_total,ziptable_rats, by = c("zip_code","monthyear"),all.x=TRUE)
+colnames(ziptable_rats_full) = c("ZIPCODE","monthyear","total_inspections","rat_sightings")
+
+ziptable_rats_full$efficiency = (ziptable_rats_full$rat_sightings/ziptable_rats_full$total_inspections) * 100
+ziptable_rats_full = ziptable_rats_full[order(ziptable_rats_full$monthyear),]
+
+ziprat_efficiency = ziptable_rats_full[,c(1,2,5)]
+
+#Opening Restaurant File
+RestData = read.csv("DOHMH_New_York_City_Restaurant_Inspection_Results.csv",header=TRUE,sep=",")
+
+#Fixing Dates
+RestData$INSPECTION.DATE = format(as.POSIXct(RestData$INSPECTION.DATE,format='%m/%d/%Y'),format='%m/%d/%Y')
+RestData$INSPECTION.DATE = as.Date(RestData$INSPECTION.DATE,"%m/%d/%Y")
+RestData$INSPECTION.DATE = as.Date(cut(RestData$INSPECTION.DATE,breaks = "month")) 
+
+#Joining the data
+colnames(RestData)[9] <- "monthyear"
+NewRestData = merge(RestData,ziprat_efficiency, by = c("ZIPCODE","monthyear"),all.x=TRUE)
+
+#Making a dummy category
+NewRestData$RatViolation <- ifelse(NewRestData$VIOLATION.CODE=="04L", 1, 0) +
+                            ifelse(NewRestData$VIOLATION.CODE=="04K", 1, 0) +
+                            ifelse(NewRestData$VIOLATION.CODE=="08A", 1, 0)
+#Splitting monthyear into month + year
+tempdf <- data.frame(do.call('rbind', strsplit(as.character(NewRestData$monthyear),'-',fixed=TRUE)))
+colnames(tempdf) <- c("Year","Month","Ignore")
+NewRestData$Month = tempdf$Month
+NewRestData$Year = tempdf$Year
+
+#And now the regression model
+finalmodel <- glm(RatViolation ~ efficiency + Month + Year, data = NewRestData, family = "binomial")
+summary(finalmodel)
