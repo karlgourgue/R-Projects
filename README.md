@@ -10,8 +10,11 @@ Titanic
 
 ## Data Storytelling Projects
 Baby Names Analysis 
+
 NYC Hurricane Sandy Rat Analysis
+
 Yelp Reviews Analysis 
+
 Lending Club
 
 ## End to End Projects
